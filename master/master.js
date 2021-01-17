@@ -1,8 +1,22 @@
 const express = require('express');
 const app = express();
-const port = 5000;
 
 const axios = require('axios');
+
+const {MongoClient} = require('mongodb');
+
+const uri = "mongodb://172.17.0.2:27017/scheduler";
+const port = 5000;
+var client;
+
+MongoClient.connect(uri, {useUnifiedTopology: true }, function(err, database) {
+    if(err) throw err;
+    client = database;
+
+    app.listen(port, () => {
+        console.log(`Master listening at http://localhost:${port}`)
+    })
+});
 
 let MOCK_DATA = {
     'taskId': 123,
@@ -15,58 +29,72 @@ let SLAVES_STATUS = {
     1: []
 };
 
-function get_task_from_db() {
-    return MOCK_DATA;
+async function get_task_from_db() {
+
+    var query = { state: "created" };
+
+    //databasesList = await client.db().admin().listDatabases();
+    //databasesList.databases.forEach(db => console.log(` - ${db.name}`));
+
+    let result = await client.db().collection("tasks").findOne(query)
+    return result
+
 }
 
-function update_task_in_db(taskId) {
-    MOCK_DATA['state'] = 'running'
+async function update_task_in_db(taskId) {
+    
+    var query = { taskId: taskId };
+    var newvalues = { $set: { state: "created" } };
+
+    await client.db().collection("tasks").updateOne(query, newvalues)
 }
 
-app.get('/assignWorker', (req, res) => {
-    console.log("Assign worker initiated");
-
+async function assignWorker() {
     // get available slave
     let available_slave = SLAVES_STATUS[0].shift();
 
-    // get tasks from DB
-    let data = get_task_from_db();
+    let data = await get_task_from_db();
 
-    // prepare payload
-    let payload = {
-        'taskId': data['taskId'],
-        'sleepTime': data['sleepTime']
-    };
-    
-    // send task to available slave
-    axios.post('http://localhost:3000/startTask', payload)
-    .then(response => {
-        if(response.data == "INITIATED") {
+    if(data != null) {
+
+        // prepare payload
+        let payload = {
+            'taskId': data['taskId'],
+            'sleepTime': data['sleepTime']
+        };
+
+        // send task to available slave
+        let response = await axios.post('http://localhost:3000/startTask', payload);
+
+        if(response.data != null) {
             SLAVES_STATUS[1].push(available_slave);
 
-            update_task_in_db(data['taskId'])
+            await update_task_in_db(data['taskId'])
 
-            console.log(SLAVES_STATUS)
-            console.log(MOCK_DATA)
         }
-        res.send(response.data)
-    })
 
+        return response;
+
+    }
+
+    return {'data': "NO PENDING TASKS"}
+}
+
+app.get('/assignWorker', (req, res) => {
+
+    console.log("Assign worker initiated");
+    assignWorker().then((response) => {res.send(response.data);})
     return;
+
 })
 
 app.post('/completeTask', (req, res) => {
+
     console.log("Complete task initiated")
-
-    for(let i = 0; i < 10; i++){
-        console.log('This loop stil works');
-    }
-
     res.send('ACK')
-
-    return "complte complete"
+    return;
 })
 
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`)
+app.get('/check_health', (req, res) => {
+    res.send('Master is Alive');
 })

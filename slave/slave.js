@@ -6,6 +6,23 @@ app.use(express.json())
 
 const axios = require('axios')
 
+function process_task(taskId, sleepTime) {
+    console.log('Processing task on slave');
+
+    setTimeout(async function() {
+        let payload = {
+            'taskId': taskId,
+            'status': 'completed'
+        }
+    
+        let response  = await axios.post('http://localhost:5000/completeTask', payload);
+        console.log(response.data);
+
+    }, sleepTime*1000)
+
+    return;
+}
+
 app.post('/startTask', (req, res) => {
     console.log("Initiated start task at worker");
 
@@ -19,27 +36,10 @@ app.post('/startTask', (req, res) => {
 
 })
 
-function process_task(taskId, sleepTime) {
-    console.log('Processing task on slave');
-
-    console.log(taskId)
-    console.log(sleepTime)
-
-    setTimeout(function (taskId) {
-        let payload = {
-            'taskId': taskId,
-            'status': 'completed'
-        }
-    
-        axios.post('http://localhost:5000/completeTask', payload)
-        .then(response => {
-            console.log(response.data);
-        })
-    }, sleepTime)
-
-    return;
-}
+app.get('/check_health', (req, res) => {
+    res.send('Slave is Alive');
+})
 
 app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`)
+  console.log(`Slave listening at http://localhost:${port}`)
 })
