@@ -5,24 +5,38 @@ const axios = require('axios');
 
 const {MongoClient} = require('mongodb');
 
-const uri = "mongodb://172.17.0.2:27017/scheduler";
+const uri = "mongodb://mongodb:27017/scheduler";
 const port = 5000;
 var client;
 
-MongoClient.connect(uri, {useUnifiedTopology: true }, function(err, database) {
-    if(err) throw err;
-    client = database;
 
-    app.listen(port, () => {
-        console.log(`Master listening at http://localhost:${port}`)
-    })
-});
+start_db_service()
 
-let MOCK_DATA = {
-    'taskId': 123,
-    'sleepTime': 3,
-    'state': 'created'
-};
+app.listen(port, () => {
+    console.log(`Master listening at http://localhost:${port}`)
+})
+
+async function start_db_service() {
+    let database = await MongoClient.connect(uri, {useUnifiedTopology:true});
+    if(database == null) {
+        console.log("Unable to connect to mongodb...");
+    } else {
+        client = database
+    }
+}
+
+// MongoClient.connect(uri, {useUnifiedTopology: true }, function(err, database) {
+//     if(err) {
+//         console.log("Unable to connect to mongodb...");
+//     } else {
+//         client = database;
+//     }
+
+//     app.listen(port, () => {
+//         console.log(`Master listening at http://localhost:${port}`)
+//     })
+// });
+
 
 let SLAVES_STATUS = {
     0: [9,8,7],
@@ -64,7 +78,7 @@ async function assignWorker() {
         };
 
         // send task to available slave
-        let response = await axios.post('http://localhost:3000/startTask', payload);
+        let response = await axios.post('http://slave:3000/startTask', payload);
 
         if(response.data != null) {
             SLAVES_STATUS[1].push(available_slave);

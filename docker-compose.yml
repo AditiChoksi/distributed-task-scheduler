@@ -1,0 +1,20 @@
+version: '3.0'
+ 
+# Define the services/ containers to be run
+services:
+ master: # name of service
+  build: master # directory of Dockerfile
+  ports:
+  - "5000:5000" # port mapping
+  depends_on:
+  - mongodb # link this service to the mongodb service
+
+ slave: # name of service
+  build: slave # directory of the Dockerfile
+  ports:
+  - "3000:3000" # ports mapping
+ 
+ mongodb: # name of service
+  image: mongo:4.2.2 # image to build container from
+  ports:
+  - "27017:27017" # specify port forwarding

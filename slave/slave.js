@@ -15,7 +15,7 @@ function process_task(taskId, sleepTime) {
             'status': 'completed'
         }
     
-        let response  = await axios.post('http://localhost:5000/completeTask', payload);
+        let response  = await axios.post('http://master:5000/completeTask', payload);
         console.log(response.data);
 
     }, sleepTime*1000)

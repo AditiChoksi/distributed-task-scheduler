@@ -4,14 +4,14 @@
   "description": "",
   "main": "master.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node master.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.21.1",
     "express": "^4.17.1",
-    "mongodb": "^3.6.3",
-    "request": "^2.88.2"
+    "mongodb": "^3.6.3"
   }
 }

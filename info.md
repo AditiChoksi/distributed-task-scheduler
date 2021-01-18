@@ -20,3 +20,8 @@ db.tasks.insert(
         'state': 'created'
     }
 )
+
+
+docker pull ubuntu:16.04
+docker run -it --name master -d node:12
+docker exec -it master bash
