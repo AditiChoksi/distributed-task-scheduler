@@ -6,14 +6,15 @@ app.use(express.json())
 
 const axios = require('axios')
 
-function process_task(taskId, sleepTime) {
+function process_task(taskId, sleepTime, hostname) {
     console.log('Processing task on slave');
 
     setTimeout(async function() {
         let payload = {
             'taskId': taskId,
-            'status': 'completed'
-        }
+            'status': 'completed',
+            'hostId': hostname
+        };
     
         let response  = await axios.post('http://master:5000/completeTask', payload);
         console.log(response.data);
@@ -30,7 +31,7 @@ app.post('/startTask', (req, res) => {
 
     res.send('INITIATED');
 
-    process_task(request_body['taskId'], request_body['sleepTime']);
+    process_task(request_body['taskId'], request_body['sleepTime'], req.hostname);
 
     return;
 

@@ -25,3 +25,7 @@ db.tasks.insert(
 docker pull ubuntu:16.04
 docker run -it --name master -d node:12
 docker exec -it master bash
+
+
+ docker-compose build
+  docker-compose up

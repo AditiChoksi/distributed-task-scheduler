@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+app.use(express.json())
 
 const axios = require('axios');
 
@@ -25,21 +26,9 @@ async function start_db_service() {
     }
 }
 
-// MongoClient.connect(uri, {useUnifiedTopology: true }, function(err, database) {
-//     if(err) {
-//         console.log("Unable to connect to mongodb...");
-//     } else {
-//         client = database;
-//     }
-
-//     app.listen(port, () => {
-//         console.log(`Master listening at http://localhost:${port}`)
-//     })
-// });
-
 
 let SLAVES_STATUS = {
-    0: [9,8,7],
+    0: ['slave'],
     1: []
 };
 
@@ -105,6 +94,16 @@ app.get('/assignWorker', (req, res) => {
 app.post('/completeTask', (req, res) => {
 
     console.log("Complete task initiated")
+    let request_body = req.body;
+
+    let hostId = request_body['hostId']
+    const index = SLAVES_STATUS[1].indexOf(hostId);
+    if (index > -1) {
+        SLAVES_STATUS[1].splice(index, 1);
+    }
+    
+    SLAVES_STATUS[0].push(hostId)
+    console.log("### ", SLAVES_STATUS)
     res.send('ACK')
     return;
 })
